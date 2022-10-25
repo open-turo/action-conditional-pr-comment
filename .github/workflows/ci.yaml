@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: open-turo/actions-gha/lint@v1
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: open-turo/actions-gha/test@v1
+
+  unit-test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+      - name: Introduce problem that needs resolution
+        run: echo "fixme" > ./badshell.sh
+      - name: Create temporary pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: Temp PR for unit testing purposes
+          base: main
+          branch: pr-for-unit-testing
+          branch-suffix: timestamp
+          token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+          draft: true
+      - name: Verify new PR created
+        run: |
+          echo "PR ${{ steps.cpr.outputs.pull-request-number }} created"
+          echo "PR operation '${{ steps.cpr.outputs.pull-request-operation}}'"
+      - name: Cleanup temporary pull request
+        if:
+          always() && ${{ steps.cpr.outputs.pull-request-operation}} ==
+          'created' && ${{ steps.cpr.outputs.pull-request-number }} != ''
+        uses: peter-evans/close-pull@v2
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          comment:
+            Auto-closing temporary PR ${{ steps.cpr.outputs.pull-request-number
+            }}
+          delete-branch: true
+          token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
