@@ -33,7 +33,7 @@ runs:
     - name:
         Check to see if problem resolution instructions comment already present
         on the PR
-      uses: peter-evans/find-comment@v1
+      uses: peter-evans/find-comment@v2
       if: github.event_name == 'pull_request'
       id: fc
       with:
