@@ -17,37 +17,96 @@ jobs:
     steps:
       - uses: open-turo/actions-gha/test@v1
 
-  unit-test:
-    name: Unit test
+  integration-test:
+    name: Integration test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
-      - name: Introduce problem that needs resolution
-        run: echo "fixme" > ./badshell.sh
-      - name: Create temporary pull request
-        id: cpr
-        uses: peter-evans/create-pull-request@v4
+      - name: Search for comment within PR
+        id: before-add-fc
+        uses: peter-evans/find-comment@v2
         with:
-          title: Temp PR for unit testing purposes
-          base: main
-          branch: pr-for-unit-testing
-          branch-suffix: timestamp
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: open-turo-bot
+          body-includes:
+            ${{ format('auto-gen for PR {0}',
+            github.event.pull_request.number)}}
           token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
-          draft: true
-      - name: Verify new PR created
+      - name: Verify comment is not already present on the PR
+        if: steps.before-add-fc.outputs.comment-id != ''
         run: |
-          echo "PR ${{ steps.cpr.outputs.pull-request-number }} created"
-          echo "PR operation '${{ steps.cpr.outputs.pull-request-operation}}'"
-      - name: Cleanup temporary pull request
-        if:
-          always() && ${{ steps.cpr.outputs.pull-request-operation}} ==
-          'created' && ${{ steps.cpr.outputs.pull-request-number }} != ''
-        uses: peter-evans/close-pull@v2
+          echo "::error title=Unexpected PR state::Comment already exists on PR"
+          exit 1
+      - name: Add comment when not already present on the PR
+        if: steps.before-add-fc.outputs.comment-id == ''
+        uses: ./
         with:
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          comment:
-            Auto-closing temporary PR ${{ steps.cpr.outputs.pull-request-number
-            }}
-          delete-branch: true
+          comment: Lorem ipsum dolor sit amet.
+          text-detector:
+            ${{ format('auto-gen for PR {0}',
+            github.event.pull_request.number)}}
+          workflow: ADD
+          github-token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Search for comment that should now be present on the PR
+        id: after-add-fc
+        uses: peter-evans/find-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: open-turo-bot
+          body-includes: ipsum dolor
           token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Verify comment is now present on the PR
+        if: steps.after-add-fc.outputs.comment-id == ''
+        run: |
+          echo "::error title=Unexpected PR state::Comment should exist on PR but is not found"
+          exit 1
+      - name: Update comment that is already present on the PR
+        if: success() && steps.after-add-fc.outputs.comment-id != ''
+        uses: ./
+        with:
+          comment: Lorem ipsum donor sit amet.
+          text-detector:
+            ${{ format('auto-gen for PR {0}',
+            github.event.pull_request.number)}}
+          workflow: ADD
+          github-token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Search for updated comment that should be present on the PR
+        id: after-update-fc
+        uses: peter-evans/find-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: open-turo-bot
+          body-includes: ipsum donor
+          token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Verify updated comment is present on the PR
+        if: steps.after-update-fc.outputs.comment-id == ''
+        run: |
+          echo "::error title=Unexpected PR state::Updated comment should exist on PR but is not found"
+          exit 1
+      - name: Now delete the comment if present
+        if: success() && steps.after-update-fc.outputs.comment-id != ''
+        uses: ./
+        with:
+          text-detector:
+            ${{ format('auto-gen for PR {0}',
+            github.event.pull_request.number)}}
+          workflow: REMOVE
+          github-token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Search for comment that should now have been deleted
+        id: after-delete-fc
+        if: success()
+        uses: peter-evans/find-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: open-turo-bot
+          body-includes: ipsum dolor
+          token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
+      - name: Verify comment is no longer present on the PR
+        if: steps.after-delete-fc.outputs.comment-id != ''
+        run: |
+          echo "::error title=Unexpected PR state::Comment should no longer exist on PR but is still present"
+          exit 1
+      - name: Test status
+        if: success() && steps.after-delete-fc.outputs.comment-id == ''
+        run: echo "Test success"

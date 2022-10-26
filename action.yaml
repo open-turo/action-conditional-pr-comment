@@ -6,52 +6,72 @@ description:
   found to be resolved, allows the previously added comment, if one exists at
   that time, to be removed from the PR.
 inputs:
-  instruction-text:
+  workflow:
     required: true
     description:
-      This is the full text of the message to be placed within a comment of the
-      given PR to instruct the author of the PR how to resolve a given problem.
-  instruction-text-detector:
+      ADD indicates the comment is to be added/updated to/within the PR, REMOVE
+      indicates the comment is to be removed from the PR.
+  text-detector:
     required: true
     description:
-      This is some unique verbatim subset of the instruction-text that is to be
-      used to determine if a comment has already been created against the PR
-      that instructs the author how to resolve the given problem.
-  delete-comment-on-resolution:
-    required: true
-    description:
-      Whether or not to delete the comment that has been added to the PR upon
-      problem resolution.
-    default: "true"
+      This is some unique verbatim subset of the comment that is to be used to
+      determine if a comment has already been created against the PR that
+      instructs the author how to resolve the given problem.
+    default: created by action-conditional-pr-comment
   github-token:
     required: true
     description:
-      GitHub token that can create/delete comments. e.g. 'secrets.GITHUB_TOKEN'
+      GitHub token that can add/update/delete comments. e.g.
+      'secrets.GITHUB_TOKEN'
+  comment:
+    required: false
+    description:
+      This is the full text of the message to be placed within a comment of the
+      given PR to instruct the author of the PR how to resolve a given problem.
+      This value should be provided for all ADD workflows.
+    default: fixme
+  comment-author:
+    required: false
+    description: The author of the comment upon addition.
+    default: open-turo-bot
 runs:
   using: composite
   steps:
-    - name:
-        Check to see if problem resolution instructions comment already present
-        on the PR
-      uses: peter-evans/find-comment@v2
-      if: github.event_name == 'pull_request'
+    - name: Verify we are in the context of a PR
+      if: github.event_name != 'pull_request'
+      shell: bash
+      ## This action can only be run in the context of a PR
+      run: |
+        echo "::warning title=Unsupported run state::This action can only be run within the context of a PR"
+        exit 1
+    - name: Check to see if comment already present on the PR
       id: fc
+      uses: peter-evans/find-comment@v2
       with:
         issue-number: ${{ github.event.pull_request.number }}
-        comment-author: "github-actions[bot]"
-        body-includes: ${{ inputs.instruction-text-detector }}
-    - name: Conditionally create instructions comment for PR author
-      if:
-        github.event_name == 'pull_request' && failure() &&
-        steps.fc.outputs.comment-id == ''
+        comment-author: ${{ inputs.comment-author }}
+        body-includes: ${{ inputs.text-detector }}
+        token: ${{ inputs.github-token }}
+    - name: Conditionally add comment to PR
+      if: inputs.workflow == 'ADD' && steps.fc.outputs.comment-id == ''
       uses: peter-evans/create-or-update-comment@v2
       with:
         issue-number: ${{ github.event.pull_request.number }}
-        body: ${{ inputs.instruction-text}}
-    - name: Delete instructions comment from PR if problem has been resolved
-      if:
-        inputs.delete-comment-on-resolution == 'true' && github.event_name ==
-        'pull_request' && success() && steps.fc.outputs.comment-id != ''
+        ## Place the comment detection text within an HTML comment.
+        body:
+          ${{ format('{0} <!-- {1} -->', inputs.comment, inputs.text-detector)}}
+        token: ${{ inputs.github-token }}
+    - name: Conditionally update existing comment within PR
+      if: inputs.workflow == 'ADD' && steps.fc.outputs.comment-id != ''
+      uses: peter-evans/create-or-update-comment@v2
+      with:
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        ## Place the comment detection text within an HTML comment.
+        body:
+          ${{ format('{0} <!-- {1} -->', inputs.comment, inputs.text-detector)}}
+        token: ${{ inputs.github-token }}
+    - name: Conditionally delete comment from PR if found
+      if: inputs.workflow == 'REMOVE' && steps.fc.outputs.comment-id != ''
       uses: jungwinter/comment@v1
       with:
         type: delete
