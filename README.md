@@ -8,6 +8,10 @@ removed from the PR.
 
 ## Usage
 
+Note that the `if: failure()` guard clause is present to indicate a problem of a
+given type has been detected to exist, and thus in that event the conditional PR
+comment action is engaged.
+
 ### Instruct PR author to run npm run prepare, delete PR comment upon resolution
 
 ```yaml
@@ -16,6 +20,7 @@ jobs:
         steps:
             - name: Do something ...
             - uses: open-turo/action-conditional-pr-comment@v1
+              if: failure()
               with:
                   workflow: ADD
                   text-detector: npm run prepare
@@ -33,6 +38,7 @@ jobs:
         steps:
             - name: Do something ...
             - uses: open-turo/action-conditional-pr-comment@v1
+              if: failure()
               with:
                   workflow: ADD
                   text-detector: npm run prepare
