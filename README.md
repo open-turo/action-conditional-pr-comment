@@ -17,11 +17,12 @@ jobs:
             - name: Do something ...
             - uses: open-turo/action-conditional-pr-comment@v1
               with:
-                  instruction-text:
+                  workflow: ADD
+                  text-detector: npm run prepare
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  comment:
                       Please run `npm run prepare` locally, then push those
                       changes to this PR
-                  instruction-text-detector: "npm run prepare"
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Instruct PR author to run npm run prepare, retain PR comment upon resolution
@@ -33,22 +34,46 @@ jobs:
             - name: Do something ...
             - uses: open-turo/action-conditional-pr-comment@v1
               with:
-                  instruction-text:
+                  workflow: ADD
+                  text-detector: npm run prepare
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  comment:
                       Please run `npm run prepare` locally, then push those
                       changes to this PR
-                  instruction-text-detector: "npm run prepare"
-                  delete-comment-on-resolution: false
+```
+
+### Instruct PR author to run npm run prepare, delete PR comment upon resolution
+
+```yaml
+jobs:
+    do-something:
+        steps:
+            - name: Do something ...
+            - uses: open-turo/action-conditional-pr-comment@v1
+              if: failure()
+              with:
+                  workflow: ADD
+                  text-detector: npm run prepare
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  comment:
+                      Please run `npm run prepare` locally, then push those
+                      changes to this PR
+            - uses: open-turo/action-conditional-pr-comment@v1
+              with:
+                  workflow: REMOVE
+                  text-detector: npm run prepare
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Inputs
 
-| parameter                    | description                                                                                                                                                                                                  | required | default |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| instruction-text             | This is the full text of the message to be placed within a comment of the given PR to instruct the author of the PR how to resolve a given problem.                                                          | `true`   |         |
-| instruction-text-detector    | This is some unique verbatim subset of the instruction-text that is to be used to determine if a comment has already been created against the PR that instructs the author how to resolve the given problem. | `true`   |         |
-| delete-comment-on-resolution | Whether or not to delete the comment that has been added to the PR upon problem resolution.                                                                                                                  | `true`   | true    |
-| github-token                 | GitHub token that can create/delete comments. e.g. 'secrets.GITHUB_TOKEN'                                                                                                                                    | `true`   |         |
+| parameter      | description                                                                                                                                                                                                | required | default                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| workflow       | `ADD` indicates the `comment` is to be added/updated to/within the PR, `REMOVE` indicates the comment is to be removed from the PR.                                                                        | `true`   |                                            |
+| text-detector  | This is some unique verbatim subset of the `comment` that is to be used to determine if a comment has already been created against the PR that instructs the author how to resolve the given problem.      | `true`   | `created by action-conditional-pr-comment` |
+| github-token   | GitHub token that can create/delete comments. e.g. 'secrets.GITHUB_TOKEN'                                                                                                                                  | `true`   |                                            |
+| comment        | This is the full text of the message to be placed within a comment of the given PR to instruct the author of the PR how to resolve a given problem. This value should be provided for all `ADD` workflows. | `false`  |                                            |
+| comment-author | The author of the comment upon addition.                                                                                                                                                                   | `false`  | `open-turo-bot`                            |
 
 ## Runs
 
