@@ -39,13 +39,16 @@ runs:
   steps:
     - name: Verify we are in the context of a PR
       if: github.event_name != 'pull_request'
+      id: pr
       shell: bash
       ## This action can only be run in the context of a PR
       run: |
-        echo "::warning title=Unsupported run state::This action can only be run within the context of a PR"
-        exit 1
+        echo "::warning title=Unsupported run state::open-turo/action-conditional-pr-comment can only be run within the context of a PR"
+        echo "no-pr=true" >> "$GITHUB_OUTPUT"
+        exit
     - name: Check to see if comment already present on the PR
       id: fc
+      if: steps.pr.outputs.no-pr != 'true'
       uses: peter-evans/find-comment@v2
       with:
         issue-number: ${{ github.event.pull_request.number }}
@@ -53,7 +56,9 @@ runs:
         body-includes: ${{ inputs.text-detector }}
         token: ${{ inputs.github-token }}
     - name: Conditionally add comment to PR
-      if: inputs.workflow == 'ADD' && steps.fc.outputs.comment-id == ''
+      if:
+        inputs.workflow == 'ADD' && steps.fc.outputs.comment-id == '' &&
+        steps.pr.outputs.no-pr != 'true'
       uses: peter-evans/create-or-update-comment@v2
       with:
         issue-number: ${{ github.event.pull_request.number }}
@@ -62,7 +67,9 @@ runs:
           ${{ format('{0} <!-- {1} -->', inputs.comment, inputs.text-detector)}}
         token: ${{ inputs.github-token }}
     - name: Conditionally update existing comment within PR
-      if: inputs.workflow == 'ADD' && steps.fc.outputs.comment-id != ''
+      if:
+        inputs.workflow == 'ADD' && steps.fc.outputs.comment-id != '' &&
+        steps.pr.outputs.no-pr != 'true'
       uses: peter-evans/create-or-update-comment@v2
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -71,7 +78,9 @@ runs:
           ${{ format('{0} <!-- {1} -->', inputs.comment, inputs.text-detector)}}
         token: ${{ inputs.github-token }}
     - name: Conditionally delete comment from PR if found
-      if: inputs.workflow == 'REMOVE' && steps.fc.outputs.comment-id != ''
+      if:
+        inputs.workflow == 'REMOVE' && steps.fc.outputs.comment-id != '' &&
+        steps.pr.outputs.no-pr != 'true'
       uses: jungwinter/comment@v1
       with:
         type: delete
