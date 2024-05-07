@@ -81,7 +81,7 @@ runs:
       if:
         inputs.workflow == 'REMOVE' && steps.fc.outputs.comment-id != '' &&
         steps.pr.outputs.no-pr != 'true'
-      uses: jungwinter/comment@v1
+      uses: winterjung/comment@v1
       with:
         type: delete
         comment_id: ${{ steps.fc.outputs.comment-id }}
