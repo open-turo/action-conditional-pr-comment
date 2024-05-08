@@ -59,7 +59,7 @@ runs:
       if:
         inputs.workflow == 'ADD' && steps.fc.outputs.comment-id == '' &&
         steps.pr.outputs.no-pr != 'true'
-      uses: peter-evans/create-or-update-comment@v2
+      uses: peter-evans/create-or-update-comment@v3
       with:
         issue-number: ${{ github.event.pull_request.number }}
         ## Place the comment detection text within an HTML comment.
@@ -70,7 +70,7 @@ runs:
       if:
         inputs.workflow == 'ADD' && steps.fc.outputs.comment-id != '' &&
         steps.pr.outputs.no-pr != 'true'
-      uses: peter-evans/create-or-update-comment@v2
+      uses: peter-evans/create-or-update-comment@v3
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
         ## Place the comment detection text within an HTML comment.
