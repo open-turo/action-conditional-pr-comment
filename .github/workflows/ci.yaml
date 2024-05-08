@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: open-turo/actions-gha/lint@v1
-
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -22,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Search for comment within PR
         id: before-add-fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: open-turo-bot
@@ -50,7 +49,7 @@ jobs:
           github-token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
       - name: Search for comment that should now be present on the PR
         id: after-add-fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: open-turo-bot
@@ -73,7 +72,7 @@ jobs:
           github-token: ${{ secrets.OPEN_TURO_GITHUB_TOKEN }}
       - name: Search for updated comment that should be present on the PR
         id: after-update-fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: open-turo-bot
@@ -96,7 +95,7 @@ jobs:
       - name: Search for comment that should now have been deleted
         id: after-delete-fc
         if: success()
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: open-turo-bot
