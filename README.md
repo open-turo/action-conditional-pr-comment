@@ -52,6 +52,12 @@ GitHub Action that supports instructing the author of a Pull Request (PR) how to
     #
     # Required: false
     # Default: open-turo-bot
+
+    edit-mode:
+    # The mode when updating a comment, "replace" or "append".
+    #
+    # Required: false
+    # Default: append
 ```
 <!-- action-docs-usage source="action.yaml" project="open-turo/action-conditional-pr-comment" version="<version>" -->
 
@@ -65,6 +71,7 @@ GitHub Action that supports instructing the author of a Pull Request (PR) how to
 | `github-token` | <p>GitHub token that can add/update/delete comments. e.g. 'secrets.GITHUB_TOKEN'</p> | `true` | `""` |
 | `comment` | <p>This is the full text of the message to be placed within a comment of the given PR to instruct the author of the PR how to resolve a given problem. This value should be provided for all ADD workflows.</p> | `false` | `fixme` |
 | `comment-author` | <p>The author of the comment upon addition.</p> | `false` | `open-turo-bot` |
+| `edit-mode` | <p>The mode when updating a comment, "replace" or "append".</p> | `false` | `append` |
 <!-- action-docs-inputs source="action.yaml" -->
 
 <!-- action-docs-outputs source="action.yaml" -->
