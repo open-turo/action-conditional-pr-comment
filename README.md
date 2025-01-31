@@ -10,30 +10,51 @@
 [![Join us!](https://img.shields.io/badge/Turo-Join%20us%21-593CFB.svg)](https://turo.com/jobs)
 
 <!-- prettier-ignore-start -->
+
 <!-- action-docs-description source="action.yaml" -->
 ## Description
 
 GitHub Action that supports instructing the author of a Pull Request (PR) how to resolve a given problem within the context of a PR. Conditionally adds a comment to the PR with resolution instructions, and once the condition is found to be resolved, allows the previously added comment, if one exists at that time, to be removed from the PR.
 <!-- action-docs-description source="action.yaml" -->
-## Description
 
-GitHub Action that publishes a new release.
-<!-- action-docs-description -->
-<!-- prettier-ignore-end -->
-
+<!-- action-docs-usage source="action.yaml" project="open-turo/action-conditional-pr-comment" version="<version>" -->
 ## Usage
 
 ```yaml
-jobs:
-    build:
-        steps:
-            - name: Update dependencies
-              uses: open-turo/action-renovate@v1
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-```
+- uses: open-turo/action-conditional-pr-comment@<version>
+  with:
+    workflow:
+    # ADD indicates the comment is to be added/updated to/within the PR, REMOVE indicates the comment is to be removed from the PR.
+    #
+    # Required: true
+    # Default: ""
 
-<!-- prettier-ignore-start -->
+    text-detector:
+    # This is some unique verbatim subset of the comment that is to be used to determine if a comment has already been created against the PR that instructs the author how to resolve the given problem.
+    #
+    # Required: true
+    # Default: created by action-conditional-pr-comment
+
+    github-token:
+    # GitHub token that can add/update/delete comments. e.g. 'secrets.GITHUB_TOKEN'
+    #
+    # Required: true
+    # Default: ""
+
+    comment:
+    # This is the full text of the message to be placed within a comment of the given PR to instruct the author of the PR how to resolve a given problem. This value should be provided for all ADD workflows.
+    #
+    # Required: false
+    # Default: fixme
+
+    comment-author:
+    # The author of the comment upon addition.
+    #
+    # Required: false
+    # Default: open-turo-bot
+```
+<!-- action-docs-usage source="action.yaml" project="open-turo/action-conditional-pr-comment" version="<version>" -->
+
 <!-- action-docs-inputs source="action.yaml" -->
 ## Inputs
 
@@ -45,44 +66,17 @@ jobs:
 | `comment` | <p>This is the full text of the message to be placed within a comment of the given PR to instruct the author of the PR how to resolve a given problem. This value should be provided for all ADD workflows.</p> | `false` | `fixme` |
 | `comment-author` | <p>The author of the comment upon addition.</p> | `false` | `open-turo-bot` |
 <!-- action-docs-inputs source="action.yaml" -->
-## Inputs
 
-| parameter | description | required | default |
-| --- | --- | --- | --- |
-| checkout-repo | Perform checkout as first step of action | `false` | true |
-| checkout-fetch-depth | The number of commits to fetch. 0 indicates all history for all branches and tags | `false` | 0 |
-| github-token | GitHub token that can checkout the repository as well as create tags/releases against it. e.g. 'secrets.GITHUB_TOKEN' | `true` | ${{ github.token }} |
-| docker-config-file | Path to the docker config file (defaults to .docker-config.json) Must contain imageName, may contain dockerfile. | `false` | .docker-config.json |
-| docker-flavor | Docker flavor to use for docker metadata | `false` | latest=false  |
-| dockerhub-user | username for dockerhub | `false` |  |
-| dockerhub-password | password for dockerhub | `false` |  |
-| npm-auth-token | The Node Package Manager (npm) authentication token. This token is used to authenticate against a private NPM registry configured via a .npmrc file. | `false` |  |
-| npm-token | The Node Package Manager (npm) authentication token. This token is used to authenticate against the NPM registry. | `false` |  |
-| dry-run | Whether to run semantic release in `dry-run` mode. It will override the `dryRun` attribute in your configuration file | `false` | false |
-| extra-plugins | Extra plugins for pre-install. You can also specify specifying version range for the extra plugins if you prefer.  Defaults to install @open-turo/semantic-release-config. | `false` | @open-turo/semantic-release-config  |
-<!-- action-docs-inputs -->
-<!-- action-docs-outputs -->
-## Outputs
-
-| parameter | description |
-| --- | --- |
-| new-release-published | Whether a new release was published |
-| new-release-version | Version of the new release |
-| new-release-major-version | Major version of the new release |
 <!-- action-docs-outputs source="action.yaml" -->
 
 <!-- action-docs-outputs source="action.yaml" -->
-<!-- action-docs-runs -->
-## Runs
 
-This action is a `composite` action.
 <!-- action-docs-runs source="action.yaml" -->
 ## Runs
 
 This action is a `composite` action.
 <!-- action-docs-runs source="action.yaml" -->
-<!-- action-docs-usage source="action.yaml"  -->
-<!-- action-docs-usage -->
+
 <!-- prettier-ignore-end -->
 
 ## Development
