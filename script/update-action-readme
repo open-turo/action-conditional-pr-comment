@@ -2,13 +2,12 @@
 
 set -ex
 
-for i in $*; do
-  # ignore if the file does not end with /action.yaml
+for i in "$@"; do
   if [[ "$i" != *"action.yaml" ]]; then
     echo "skipping: ${i}"
     continue
   fi
   readme_file=$(dirname "$i")/README.md
-  echo "npx action-docs --no-banner -a "${i}" --update-readme "${readme_file}""
-  npx action-docs@2 --no-banner -a "${i}" --update-readme "${readme_file}"
+  echo "npx action-docs2.5.1 --no-banner -s ${i} -u README.md"
+  npx action-docs@2.5.1 --no-banner -s "$i" -u "${readme_file}" || echo "action-docs failed for $i"
 done
